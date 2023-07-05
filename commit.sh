@@ -242,8 +242,17 @@ while [[ $restart -eq 0 ]]; do
 done
 
 # push command
-remote_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
-push_command="git push origin $remote_branch"
+branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+if [[ -z "$branch" ]]; then
+	printf "%bUnable to proceed with push command. (Branch name is empty.)%b\n" "$c_bold_red" "$c_clear"
+	exit 1
+fi
+remotes=$(git remote show 2>/dev/null)
+if [[ -z "$remotes" || (! $remotes =~ .*"origin".*) ]]; then
+	printf "%bUnable to proceed with push command. (Remote 'origin' not found.)%b\n" "$c_bold_red" "$c_clear"
+	exit 1
+fi
+push_command="git push origin $branch"
 printf "Review the push command: %b%s%b\n" "$c_green" "$push_command" "$c_clear"
 while [[ -z $push_confirmation || (! $push_confirmation =~ ^[YN]$) ]]; do
 	printf "Ready to push? %b(Y)%bes %b(N)%bo: " "$c_green" "$c_clear" "$c_red" "$c_clear"
